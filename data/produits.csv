@@ -1,0 +1,51 @@
+id_produit,nom,marque,sku,id_categorie,actif
+e09188fe-1cba-4a58-71cb-d0a5153f8465,Crème Hydratante Peaux Sensibles 50ml,Marque DERMO,SKU-001,191662b8-e469-68e8-fe08-7aca9533e8bb,true
+0d801bc1-cf93-b814-e6b6-867d6d568b65,Sérum Vitamine C Éclat 30ml,Marque DERMO,SKU-002,191662b8-e469-68e8-fe08-7aca9533e8bb,true
+1c6ecee9-6281-b128-4fab-3a114050e2af,Gel Nettoyant Purifiant 200ml,Marque DERMO,SKU-003,191662b8-e469-68e8-fe08-7aca9533e8bb,true
+a959c058-b529-3fae-d107-2e9212687fce,Crème Anti-Âge Nuit 40ml,Marque DERMO,SKU-004,191662b8-e469-68e8-fe08-7aca9533e8bb,true
+a805ffe0-c77a-9b91-1dd5-86d3bd76db4c,Fluide Matifiant SPF30 50ml,Marque DERMO,SKU-005,191662b8-e469-68e8-fe08-7aca9533e8bb,true
+db36c9b2-b05a-e11c-9c7d-6f2ed95c39bd,Baume Lèvres Réparateur,Marque DERMO,SKU-006,191662b8-e469-68e8-fe08-7aca9533e8bb,true
+9e8d7cb0-3eb5-55bf-8b77-d22ab16249ac,Eau Micellaire Douceur 400ml,Marque DERMO,SKU-007,191662b8-e469-68e8-fe08-7aca9533e8bb,true
+89c580d3-4628-ab6c-8208-8d3ddb55ed41,Crème Mains Nourrissante 75ml,Marque DERMO,SKU-008,191662b8-e469-68e8-fe08-7aca9533e8bb,true
+5e8bc4be-7f1c-47fc-f303-ccb9d42969e5,Masque Apaisant Aloe Vera,Marque DERMO,SKU-009,191662b8-e469-68e8-fe08-7aca9533e8bb,true
+b6777ff0-8c64-6f91-6389-28cf6fb8f506,Lotion Tonique Hydratante,Marque DERMO,SKU-010,191662b8-e469-68e8-fe08-7aca9533e8bb,true
+89df2eeb-6f7f-a085-de29-bba7d9d86899,Paracétamol 500mg Boîte 16,Marque OTC,SKU-011,71e139bb-dd77-ebb8-bfa5-d48076eb6d25,true
+3f792046-65b6-9c84-8d44-1168d8d6bb2f,Ibuprofène 200mg Boîte 20,Marque OTC,SKU-012,71e139bb-dd77-ebb8-bfa5-d48076eb6d25,true
+943cf696-94e8-9702-5b0c-59349e9bd967,Sirop Toux Sèche 150ml,Marque OTC,SKU-013,71e139bb-dd77-ebb8-bfa5-d48076eb6d25,true
+1feeb8af-5f39-7cd2-89c5-9a5f54fbca4c,Spray Gorge Apaisant,Marque OTC,SKU-014,71e139bb-dd77-ebb8-bfa5-d48076eb6d25,true
+5fca3fa8-0355-bc7d-48e1-f14eba91c4d0,Pastilles Gorge Menthol,Marque OTC,SKU-015,71e139bb-dd77-ebb8-bfa5-d48076eb6d25,true
+dc376410-0f50-25a9-9f5b-6baad2887f1b,Spray Nasal Décongestionnant,Marque OTC,SKU-016,71e139bb-dd77-ebb8-bfa5-d48076eb6d25,true
+627d5aea-6883-499c-591a-ed1b1a2f0453,Solution Lavage Nasal,Marque OTC,SKU-017,71e139bb-dd77-ebb8-bfa5-d48076eb6d25,true
+4e27c827-f374-507c-0c38-73b8f1c2fe87,Crème Antalgique Musculaire,Marque OTC,SKU-018,71e139bb-dd77-ebb8-bfa5-d48076eb6d25,true
+4ef593e8-53a4-f85b-c8db-9d1ab7710e08,Comprimés Allergie Printemps,Marque OTC,SKU-019,71e139bb-dd77-ebb8-bfa5-d48076eb6d25,true
+c53c4d5a-6a10-71b2-9016-c2c3614d3186,Gel Arnica Chocs & Bleus,Marque OTC,SKU-020,71e139bb-dd77-ebb8-bfa5-d48076eb6d25,true
+296c00a6-2323-2bb5-1678-0e3d009e8cd9,Magnésium + Vitamine B6,Marque COMP,SKU-021,f374adea-52b2-39b8-77f9-b10f61e98e4c,true
+916dd668-841b-770e-1bed-1eadbb15cd24,Vitamine D3 1000 UI,Marque COMP,SKU-022,f374adea-52b2-39b8-77f9-b10f61e98e4c,true
+9e72a8e6-808d-57b5-f5d4-f37f40093067,Complexe Immunité,Marque COMP,SKU-023,f374adea-52b2-39b8-77f9-b10f61e98e4c,true
+da1dd1ec-b620-bfe2-95c4-a8f007c1055d,Oméga 3 Capsules,Marque COMP,SKU-024,f374adea-52b2-39b8-77f9-b10f61e98e4c,true
+0078aa35-58c4-9e94-f525-ad5461ef3c8b,Probiotiques Équilibre Intestinal,Marque COMP,SKU-025,f374adea-52b2-39b8-77f9-b10f61e98e4c,true
+aabfa196-366d-2268-9151-5ba52ac83eae,Collagène Marin,Marque COMP,SKU-026,f374adea-52b2-39b8-77f9-b10f61e98e4c,true
+ced1318a-7252-e076-92ed-bd2a8e1beaf9,Multivitamines Adulte,Marque COMP,SKU-027,f374adea-52b2-39b8-77f9-b10f61e98e4c,true
+03e0d185-be8d-7f62-97ce-debfd14a631d,Fer + Vitamine C,Marque COMP,SKU-028,f374adea-52b2-39b8-77f9-b10f61e98e4c,true
+37049c73-6d78-311f-26bb-36fd23fcad78,Mélatonine Sommeil,Marque COMP,SKU-029,f374adea-52b2-39b8-77f9-b10f61e98e4c,true
+71871bcc-3729-3008-def2-a18dd7f01469,Complexe Articulations,Marque COMP,SKU-030,f374adea-52b2-39b8-77f9-b10f61e98e4c,true
+ed9ac2f1-31da-12cd-88f5-7b3d3420fab0,Gel Douche Peaux Sensibles,Marque HYGI,SKU-031,54c6abce-d03b-73ef-fd0c-850fa0a32cbd,true
+b7855ee9-5503-6306-7ae4-119f67bac68a,Shampooing Usage Fréquent,Marque HYGI,SKU-032,54c6abce-d03b-73ef-fd0c-850fa0a32cbd,true
+27fac32b-e757-dd8a-7ad4-9d5905454321,Dentifrice Gencives Sensibles,Marque HYGI,SKU-033,54c6abce-d03b-73ef-fd0c-850fa0a32cbd,true
+bed36f77-213e-cda9-38d1-6285492bb63a,Bain de Bouche Fraîcheur,Marque HYGI,SKU-034,54c6abce-d03b-73ef-fd0c-850fa0a32cbd,true
+b2e50c7c-35d0-91f2-955c-b610e38e0867,Savon Surgras Dermatologique,Marque HYGI,SKU-035,54c6abce-d03b-73ef-fd0c-850fa0a32cbd,true
+178e17a7-6a8c-4fa3-dda4-1649c4156bed,Déodorant Peaux Sensibles,Marque HYGI,SKU-036,54c6abce-d03b-73ef-fd0c-850fa0a32cbd,true
+70b72c26-1594-6b15-b92c-714a6dc3c774,Solution Désinfectante Mains,Marque HYGI,SKU-037,54c6abce-d03b-73ef-fd0c-850fa0a32cbd,true
+36c22830-c4d1-37a7-b363-0ce8b807976b,Pansements Assortis,Marque HYGI,SKU-038,54c6abce-d03b-73ef-fd0c-850fa0a32cbd,true
+4c4ef9fd-4444-0340-3b31-4ced30d5a6af,Gel Hydroalcoolique 100ml,Marque HYGI,SKU-039,54c6abce-d03b-73ef-fd0c-850fa0a32cbd,true
+9c08fc94-5ae8-585c-9c2c-52d7a05c46a5,Eau Oxygénée 10 Volumes,Marque HYGI,SKU-040,54c6abce-d03b-73ef-fd0c-850fa0a32cbd,true
+e84ba90e-d6b7-0fba-27b0-204aa325ec72,Lait Infantile 1er Âge,Marque BEBE,SKU-041,331a8d98-f732-3fdc-2af2-4e40cea32689,true
+dc2e873b-0dc2-919a-27b4-2799cc7f98fc,Lait Infantile 2ème Âge,Marque BEBE,SKU-042,331a8d98-f732-3fdc-2af2-4e40cea32689,true
+7a857628-6f30-32df-6392-c465c6a8e33e,Liniment Oléo-Calcaire,Marque BEBE,SKU-043,331a8d98-f732-3fdc-2af2-4e40cea32689,true
+b60ddbf8-b476-33ad-7518-4993db5c7d2f,Crème Change Bébé,Marque BEBE,SKU-044,331a8d98-f732-3fdc-2af2-4e40cea32689,true
+3a1275fd-506b-d45d-2b81-bac7fad16020,Thermomètre Digital Bébé,Marque BEBE,SKU-045,331a8d98-f732-3fdc-2af2-4e40cea32689,true
+9fe5bc64-3d17-d547-ca1d-6e3f6343c5b4,Sérum Physiologique Bébé,Marque BEBE,SKU-046,331a8d98-f732-3fdc-2af2-4e40cea32689,true
+4dc41e59-9842-2db6-b0b3-fa245ff0d5e2,Gel Lavant Bébé,Marque BEBE,SKU-047,331a8d98-f732-3fdc-2af2-4e40cea32689,true
+08a39f76-83b1-ad60-f969-91eba7801d41,Sucettes Silicone 0-6 mois,Marque BEBE,SKU-048,331a8d98-f732-3fdc-2af2-4e40cea32689,true
+4ea06134-9943-4200-1d33-3fcbb7dd2114,Huile Massage Bébé,Marque BEBE,SKU-049,331a8d98-f732-3fdc-2af2-4e40cea32689,true
+c1dce336-7938-2050-a0a0-c7fbe86c0d4c,Vitamine D Bébé,Marque BEBE,SKU-050,331a8d98-f732-3fdc-2af2-4e40cea32689,true

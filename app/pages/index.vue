@@ -37,24 +37,7 @@ async function loadData() {
       </select>
     </div>
 
-    <table v-if="data.length">
-      <thead>
-        <tr>
-          <th>Mois</th>
-          <th>CA</th>
-          <th>Quantité</th>
-          <th>Prix moyen</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="row in data" :key="row.mois">
-          <td>{{ row.mois }}</td>
-          <td>{{ row.chiffre_affaires.toLocaleString() }} €</td>
-          <td>{{ row.quantite }}</td>
-          <td>{{ row.prix_moyen_pondere }} €</td>
-        </tr>
-      </tbody>
-    </table>
+    <RevenueChart v-if="data.length" :points="data" />
   </div>
 </template>
 

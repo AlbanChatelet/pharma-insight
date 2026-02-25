@@ -190,6 +190,47 @@ app.post("/admin/reload", (req, res) => {
   });
 });
 
+app.get("/compare/yearly", (req, res) => {
+  const year = YearSchema.parse(req.query.year);
+  const ref = YearSchema.parse(req.query.ref);
+  const categoryId = req.query.categoryId ? String(req.query.categoryId) : null;
+
+  const rowsY = salesFilter({ year, categoryId });
+  const rowsR = salesFilter({ year: ref, categoryId });
+
+  const { ca: caY, qty: qtyY } = sumRevenue(rowsY);
+  const { ca: caR, qty: qtyR } = sumRevenue(rowsR);
+
+  const pmY = qtyY > 0 ? caY / qtyY : 0;
+  const pmR = qtyR > 0 ? caR / qtyR : 0;
+
+  const deltaCA = caY - caR;
+  const deltaQty = qtyY - qtyR;
+  const deltaPm = pmY - pmR;
+
+  const pct = (a, b) => (b !== 0 ? (a / b) * 100 : 0);
+
+  res.json({
+    scope: { year, ref, categoryId },
+    year: {
+      chiffre_affaires: Math.round(caY * 100) / 100,
+      quantite: qtyY,
+      prix_moyen_pondere: Math.round(pmY * 100) / 100,
+    },
+    ref: {
+      chiffre_affaires: Math.round(caR * 100) / 100,
+      quantite: qtyR,
+      prix_moyen_pondere: Math.round(pmR * 100) / 100,
+    },
+    delta: {
+      chiffre_affaires: Math.round(deltaCA * 100) / 100,
+      quantite: deltaQty,
+      prix_moyen_pondere: Math.round(deltaPm * 100) / 100,
+      pct_chiffre_affaires: Math.round(pct(deltaCA, caR) * 100) / 100,
+    },
+  });
+});
+
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`✅ Express API running on http://localhost:${PORT}`);

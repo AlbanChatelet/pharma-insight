@@ -13,27 +13,22 @@ import { Bar } from "vue-chartjs";
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
 const props = defineProps({
-  points: {
-    type: Array,
-    required: true
-  }
+  pointsYear: { type: Array, required: true },
+  pointsRef: { type: Array, required: true },
+  yearLabel: { type: [String, Number], required: true },
+  refLabel: { type: [String, Number], required: true }
 });
 
-const labels = computed(() =>
-  props.points.map((p) => `M${p.mois}`)
-);
+const labels = computed(() => props.pointsYear.map((p) => `M${p.mois}`));
 
-const dataset = computed(() =>
-  props.points.map((p) => Number(p.chiffre_affaires) || 0)
-);
+const dataYear = computed(() => props.pointsYear.map((p) => Number(p.chiffre_affaires) || 0));
+const dataRef = computed(() => props.pointsRef.map((p) => Number(p.chiffre_affaires) || 0));
 
 const chartData = computed(() => ({
   labels: labels.value,
   datasets: [
-    {
-      label: "Chiffre d'affaires (€)",
-      data: dataset.value
-    }
+    { label: `CA ${props.refLabel} (€)`, data: dataRef.value },
+    { label: `CA ${props.yearLabel} (€)`, data: dataYear.value }
   ]
 }));
 
@@ -42,17 +37,17 @@ const options = {
   maintainAspectRatio: false,
   plugins: {
     legend: { display: true },
-    title: { display: true, text: "CA mensuel" },
+    title: { display: true, text: "CA mensuel (comparaison)" },
     tooltip: {
       callbacks: {
-        label: (ctx) => `${ctx.parsed.y.toLocaleString()} €`
+        label: (ctx) => `${ctx.parsed.y.toLocaleString("fr-FR")} €`
       }
     }
   },
   scales: {
     y: {
       ticks: {
-        callback: (v) => `${Number(v).toLocaleString()} €`
+        callback: (v) => `${Number(v).toLocaleString("fr-FR")} €`
       }
     }
   }
@@ -60,14 +55,7 @@ const options = {
 </script>
 
 <template>
-  <div class="chart-wrap">
+  <div class="h-[420px] w-full">
     <Bar :data="chartData" :options="options" />
   </div>
 </template>
-
-<style scoped>
-.chart-wrap {
-  height: 360px;
-  width: 100%;
-}
-</style>

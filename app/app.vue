@@ -70,6 +70,15 @@ function isActive(path) {
 >
   Top produits
 </NuxtLink>
+<NuxtLink
+  to="/evolution"
+  class="pb-1 border-b-2 transition"
+  :class="isActive('/evolution')
+    ? 'border-slate-900 text-slate-900'
+    : 'border-transparent text-slate-500 hover:text-slate-900'"
+>
+  Évolution
+</NuxtLink>
         </nav>
 
       </div>

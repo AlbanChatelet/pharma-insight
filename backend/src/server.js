@@ -451,6 +451,109 @@ app.get("/analysis/top-products", (req, res) => {
   });
 });
 
+app.get("/analysis/product", (req, res) => {
+  const year = YearSchema.parse(req.query.year);
+  const ref = YearSchema.parse(req.query.ref);
+  const productId = req.query.productId ? String(req.query.productId) : null;
+
+  if (!productId) return res.status(400).json({ error: "Missing productId" });
+
+  const product = db.productById.get(productId);
+  if (!product) return res.status(404).json({ error: "Product not found" });
+
+  const rowsY = db.sales.filter(
+    (s) => s.annee === year && s.id_produit === productId,
+  );
+  const rowsR = db.sales.filter(
+    (s) => s.annee === ref && s.id_produit === productId,
+  );
+
+  const { ca: caY, qty: qtyY } = sumRevenue(rowsY);
+  const { ca: caR, qty: qtyR } = sumRevenue(rowsR);
+
+  const pmY = qtyY > 0 ? caY / qtyY : 0;
+  const pmR = qtyR > 0 ? caR / qtyR : 0;
+
+  const deltaCA = caY - caR;
+
+  const effet_volume = (qtyY - qtyR) * pmR;
+  const effet_prix = (pmY - pmR) * qtyY;
+  const effet_mix = deltaCA - effet_volume - effet_prix;
+
+  const pct = (a, b) => (b !== 0 ? (a / b) * 100 : 0);
+
+  res.json({
+    scope: { year, ref, productId },
+    product: {
+      id_produit: product.id_produit,
+      nom: product.nom,
+      marque: product.marque,
+      sku: product.sku,
+      categorie: db.categoryById.get(product.id_categorie)?.nom ?? "Catégorie",
+    },
+    year: {
+      chiffre_affaires: Math.round(caY * 100) / 100,
+      quantite: qtyY,
+      prix_moyen_pondere: Math.round(pmY * 100) / 100,
+    },
+    ref: {
+      chiffre_affaires: Math.round(caR * 100) / 100,
+      quantite: qtyR,
+      prix_moyen_pondere: Math.round(pmR * 100) / 100,
+    },
+    delta: {
+      chiffre_affaires: Math.round(deltaCA * 100) / 100,
+      pct_chiffre_affaires: Math.round(pct(deltaCA, caR) * 100) / 100,
+    },
+    decomposition: {
+      effet_volume: Math.round(effet_volume * 100) / 100,
+      effet_prix: Math.round(effet_prix * 100) / 100,
+      effet_mix: Math.round(effet_mix * 100) / 100,
+    },
+  });
+});
+
+app.get("/timeseries/product", (req, res) => {
+  const year = YearSchema.parse(req.query.year);
+  const productId = req.query.productId ? String(req.query.productId) : null;
+
+  if (!productId) return res.status(400).json({ error: "Missing productId" });
+  const product = db.productById.get(productId);
+  if (!product) return res.status(404).json({ error: "Product not found" });
+
+  const rows = db.sales.filter(
+    (s) => s.annee === year && s.id_produit === productId,
+  );
+
+  const byMonth = Array.from({ length: 12 }, (_, i) => ({
+    mois: i + 1,
+    ca: 0,
+    qty: 0,
+  }));
+
+  for (const r of rows) {
+    const i = r.mois - 1;
+    byMonth[i].ca += r.quantite * r.prix_moyen_unitaire;
+    byMonth[i].qty += r.quantite;
+  }
+
+  res.json({
+    scope: { year, productId },
+    product: {
+      id_produit: product.id_produit,
+      nom: product.nom,
+      categorie: db.categoryById.get(product.id_categorie)?.nom ?? "Catégorie",
+    },
+    points: byMonth.map((m) => ({
+      mois: m.mois,
+      chiffre_affaires: Math.round(m.ca * 100) / 100,
+      quantite: m.qty,
+      prix_moyen_pondere:
+        m.qty > 0 ? Math.round((m.ca / m.qty) * 100) / 100 : 0,
+    })),
+  });
+});
+
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`✅ Express API running on http://localhost:${PORT}`);

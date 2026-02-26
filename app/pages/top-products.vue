@@ -172,7 +172,12 @@ onMounted(async () => {
             <tbody>
               <tr v-for="p in result.items" :key="p.id_produit" class="border-t border-slate-200">
                 <td class="px-4 py-3">
-                  <div class="font-medium text-slate-900">{{ p.produit }}</div>
+                  <NuxtLink
+  :to="`/products/${p.id_produit}`"
+  class="font-medium text-slate-900 hover:underline"
+>
+  {{ p.produit }}
+</NuxtLink>
                   <div class="text-xs text-slate-500">{{ p.categorie }}</div>
                 </td>
 

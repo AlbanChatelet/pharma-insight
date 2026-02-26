@@ -359,6 +359,98 @@ app.get("/analysis/diagnostic", (req, res) => {
   });
 });
 
+app.get("/analysis/top-products", (req, res) => {
+  const year = YearSchema.parse(req.query.year);
+  const ref = YearSchema.parse(req.query.ref);
+  const categoryId = req.query.categoryId ? String(req.query.categoryId) : null;
+  const limit = req.query.limit
+    ? Math.max(1, Math.min(50, Number(req.query.limit)))
+    : 10;
+
+  // Agrégation en 1 passe (perf)
+  const agg = new Map(); // id_produit -> { caY, qtyY, caR, qtyR }
+
+  for (const s of db.sales) {
+    if (s.annee !== year && s.annee !== ref) continue;
+
+    const p = db.productById.get(s.id_produit);
+    if (!p) continue;
+
+    if (categoryId && p.id_categorie !== categoryId) continue;
+
+    let a = agg.get(s.id_produit);
+    if (!a) {
+      a = { caY: 0, qtyY: 0, caR: 0, qtyR: 0 };
+      agg.set(s.id_produit, a);
+    }
+
+    const ca = s.quantite * s.prix_moyen_unitaire;
+    if (s.annee === year) {
+      a.caY += ca;
+      a.qtyY += s.quantite;
+    } else {
+      a.caR += ca;
+      a.qtyR += s.quantite;
+    }
+  }
+
+  const items = [];
+  let totalDelta = 0;
+
+  for (const [id_produit, a] of agg.entries()) {
+    const p = db.productById.get(id_produit);
+    const caY = a.caY;
+    const caR = a.caR;
+    const qtyY = a.qtyY;
+    const qtyR = a.qtyR;
+
+    const pmY = qtyY > 0 ? caY / qtyY : 0;
+    const pmR = qtyR > 0 ? caR / qtyR : 0;
+
+    const delta = caY - caR;
+
+    // Décomposition produit (résiduel = mix/interaction/arrondis)
+    const effet_volume = (qtyY - qtyR) * pmR;
+    const effet_prix = (pmY - pmR) * qtyY;
+    const effet_mix = delta - effet_volume - effet_prix;
+
+    totalDelta += delta;
+
+    items.push({
+      id_produit,
+      produit: p.nom,
+      categorie: db.categoryById.get(p.id_categorie)?.nom ?? "Catégorie",
+      ca_ref: Math.round(caR * 100) / 100,
+      ca_year: Math.round(caY * 100) / 100,
+      delta: Math.round(delta * 100) / 100,
+      qty_ref: qtyR,
+      qty_year: qtyY,
+      pm_ref: Math.round(pmR * 100) / 100,
+      pm_year: Math.round(pmY * 100) / 100,
+      decomposition: {
+        effet_volume: Math.round(effet_volume * 100) / 100,
+        effet_prix: Math.round(effet_prix * 100) / 100,
+        effet_mix: Math.round(effet_mix * 100) / 100,
+      },
+    });
+  }
+
+  totalDelta = Math.round(totalDelta * 100) / 100;
+
+  const sorted = items.sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta));
+  const top = sorted.slice(0, limit).map((x) => ({
+    ...x,
+    share_of_delta:
+      totalDelta !== 0 ? Math.round((x.delta / totalDelta) * 10000) / 100 : 0,
+  }));
+
+  res.json({
+    scope: { year, ref, categoryId, limit },
+    total_delta: totalDelta,
+    items: top,
+  });
+});
+
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`✅ Express API running on http://localhost:${PORT}`);

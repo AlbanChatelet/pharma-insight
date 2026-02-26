@@ -61,6 +61,15 @@ function isActive(path) {
 >
   Diagnostic
 </NuxtLink>
+<NuxtLink
+  to="/top-products"
+  class="pb-1 border-b-2 transition"
+  :class="isActive('/top-products')
+    ? 'border-slate-900 text-slate-900'
+    : 'border-transparent text-slate-500 hover:text-slate-900'"
+>
+  Top produits
+</NuxtLink>
         </nav>
 
       </div>

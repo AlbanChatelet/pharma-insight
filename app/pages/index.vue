@@ -45,7 +45,7 @@ onMounted(async () => {
     years.value = yearsJson.years || [];
     categories.value = catsJson.categories || [];
 
-    selectedYear.value = years.value[0] ?? null;
+    selectedYear.value = years.value.at(-1) ?? null;
     selectedCategoryId.value = "ALL";
 
     await loadAll();

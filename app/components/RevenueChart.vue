@@ -9,7 +9,7 @@ import {
   Legend
 } from "chart.js";
 import { Bar } from "vue-chartjs";
-
+import { computed } from "vue";
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
 const props = defineProps({

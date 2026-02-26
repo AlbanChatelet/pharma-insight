@@ -278,6 +278,87 @@ app.get("/analysis/price-volume", (req, res) => {
   });
 });
 
+app.get("/analysis/diagnostic", (req, res) => {
+  const year = YearSchema.parse(req.query.year);
+  const ref = YearSchema.parse(req.query.ref);
+
+  const rowsY = salesFilter({ year });
+  const rowsR = salesFilter({ year: ref });
+
+  const { ca: caY, qty: qtyY } = sumRevenue(rowsY);
+  const { ca: caR, qty: qtyR } = sumRevenue(rowsR);
+
+  const pmY = qtyY > 0 ? caY / qtyY : 0;
+  const pmR = qtyR > 0 ? caR / qtyR : 0;
+
+  const deltaCA = caY - caR;
+
+  const effet_volume = (qtyY - qtyR) * pmR;
+  const effet_prix = (pmY - pmR) * qtyY;
+  const effet_mix = deltaCA - effet_volume - effet_prix;
+
+  // --- Catégorie la plus contributrice ---
+  const categoryDeltas = db.categories.map((cat) => {
+    const y = salesFilter({ year, categoryId: cat.id_categorie });
+    const r = salesFilter({ year: ref, categoryId: cat.id_categorie });
+
+    const caYcat = sumRevenue(y).ca;
+    const caRcat = sumRevenue(r).ca;
+
+    return {
+      categorie: cat.nom,
+      delta: caYcat - caRcat,
+    };
+  });
+
+  const topCategory = categoryDeltas.sort(
+    (a, b) => Math.abs(b.delta) - Math.abs(a.delta),
+  )[0];
+
+  // --- Top produits contributeurs ---
+  const productMap = new Map();
+
+  for (const p of db.products) {
+    const y = salesFilter({ year }).filter(
+      (s) => s.id_produit === p.id_produit,
+    );
+    const r = salesFilter({ year: ref }).filter(
+      (s) => s.id_produit === p.id_produit,
+    );
+
+    const caYprod = sumRevenue(y).ca;
+    const caRprod = sumRevenue(r).ca;
+
+    const delta = caYprod - caRprod;
+
+    productMap.set(p.id_produit, {
+      produit: p.nom,
+      delta,
+    });
+  }
+
+  const topProducts = Array.from(productMap.values())
+    .sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta))
+    .slice(0, 3);
+
+  const pct = (a, b) => (b !== 0 ? (a / b) * 100 : 0);
+
+  res.json({
+    scope: { year, ref },
+    summary: {
+      delta_ca: Math.round(deltaCA * 100) / 100,
+      pct_ca: Math.round(pct(deltaCA, caR) * 100) / 100,
+    },
+    drivers: {
+      effet_volume: Math.round(effet_volume * 100) / 100,
+      effet_prix: Math.round(effet_prix * 100) / 100,
+      effet_mix: Math.round(effet_mix * 100) / 100,
+    },
+    top_category: topCategory,
+    top_products: topProducts,
+  });
+});
+
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`✅ Express API running on http://localhost:${PORT}`);

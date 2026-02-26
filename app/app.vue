@@ -52,6 +52,15 @@ function isActive(path) {
 >
   Prix vs Volume
 </NuxtLink>
+<NuxtLink
+  to="/diagnostic"
+  class="pb-1 border-b-2 transition"
+  :class="isActive('/diagnostic')
+    ? 'border-slate-900 text-slate-900'
+    : 'border-transparent text-slate-500 hover:text-slate-900'"
+>
+  Diagnostic
+</NuxtLink>
         </nav>
 
       </div>

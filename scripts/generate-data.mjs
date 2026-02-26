@@ -47,7 +47,8 @@ function rand01(key) {
 const OUT_DIR = path.resolve("data");
 if (!fs.existsSync(OUT_DIR)) fs.mkdirSync(OUT_DIR, { recursive: true });
 
-const years = [2023, 2024, 2025]; // 3 années (modifie si tu veux)
+// ✅ 6 années : 2020 → 2025
+const years = [2020, 2021, 2022, 2023, 2024, 2025];
 const months = Array.from({ length: 12 }, (_, i) => i + 1);
 
 // 5 catégories (10 produits chacune)
@@ -126,7 +127,7 @@ const productDefs = [
   ["Vitamine D Bébé", "BEBE"],
 ];
 
-// Stars (selon notre plan)
+// Stars
 const starNames = new Set([
   "Paracétamol 500mg Boîte 16",
   "Ibuprofène 200mg Boîte 20",
@@ -145,10 +146,9 @@ const products = productDefs.map(([nom, catCode], idx) => {
   const cat = categories.find((c) => c.code === catCode);
   const id_produit = uuidFromString(`prod:${nom}`);
   const sku = `SKU-${String(idx + 1).padStart(3, "0")}`;
-  const marque = `Marque ${catCode}`; // générique
+  const marque = `Marque ${catCode}`;
   const isStar = starNames.has(nom);
 
-  // Base price by category + a little deterministic spread
   const baseByCat = {
     OTC: 6.5,
     DERMO: 14.0,
@@ -173,7 +173,7 @@ const products = productDefs.map(([nom, catCode], idx) => {
   };
 });
 
-// Assign NORMAL products into MID/SMALL based on deterministic ranking to match 25/15
+// Assign NORMAL products into MID/SMALL
 const normals = products.filter((p) => p.tier !== "STAR");
 const rankedNormals = normals
   .map((p) => ({ p, r: rand01(`tierRank:${p.nom}`) }))
@@ -183,49 +183,66 @@ rankedNormals.forEach((obj, i) => {
   obj.p.tier = i < 25 ? "MID" : "SMALL";
 });
 
-// Seasonality factors by category and month (simple but credible)
+// Seasonality
 function seasonality(catCode, month) {
-  // month: 1..12
   const m = month;
   if (catCode === "OTC") {
-    // Jan-Feb high, Oct-Nov medium
     if (m === 1 || m === 2) return 1.35;
     if (m === 10 || m === 11) return 1.15;
     return 0.95;
   }
   if (catCode === "DERMO") {
-    // May-Aug higher
     if (m >= 5 && m <= 8) return 1.2;
     if (m === 12) return 1.05;
     return 0.95;
   }
   if (catCode === "COMP") {
-    // Mar-Apr and Sep-Nov higher
     if (m === 3 || m === 4) return 1.2;
     if (m >= 9 && m <= 11) return 1.15;
     return 0.95;
   }
   if (catCode === "HYGI") {
-    // stable, slight Sep bump
     if (m === 9) return 1.08;
     return 1.0;
   }
-  if (catCode === "BEBE") {
-    // very stable
-    return 1.0;
-  }
+  if (catCode === "BEBE") return 1.0;
   return 1.0;
 }
 
-// Year multipliers (global + category adjustments)
-// 2023 base, 2024 growth, 2025 decline (OTC hit)
+// ✅ Year multipliers
+// 2020 baseline
+// 2021 growth
+// 2022 decline (OTC hit)
+// 2023 stabilization / slight recovery
+// 2024 growth
+// 2025 decline (OTC hit again)
 const yearConfig = {
-  2023: { vol: 1.0, price: 1.0, catVol: {} },
+  2020: { vol: 1.0, price: 1.0, catVol: {} },
+
+  2021: {
+    vol: 1.08,
+    price: 1.03,
+    catVol: { DERMO: 1.1, COMP: 1.14, OTC: 1.05, HYGI: 1.05, BEBE: 1.02 },
+  },
+
+  2022: {
+    vol: 0.94,
+    price: 1.01,
+    catVol: { OTC: 0.85, DERMO: 1.0, COMP: 1.03, HYGI: 0.95, BEBE: 1.0 },
+  },
+
+  2023: {
+    vol: 0.99,
+    price: 1.02,
+    catVol: { OTC: 0.92, DERMO: 1.03, COMP: 1.04, HYGI: 1.0, BEBE: 1.0 },
+  },
+
   2024: {
     vol: 1.08,
     price: 1.03,
     catVol: { DERMO: 1.12, COMP: 1.15, OTC: 1.05, HYGI: 1.06, BEBE: 1.02 },
   },
+
   2025: {
     vol: 0.94,
     price: 1.01,
@@ -235,23 +252,21 @@ const yearConfig = {
 
 // Base quantities by tier
 function baseQty(tier, productName) {
-  const jitter = rand01(`qtyBase:${productName}`) - 0.5; // [-0.5, 0.5)
-  if (tier === "STAR") return Math.round(260 + jitter * 60); // ~230-290
-  if (tier === "MID") return Math.round(115 + jitter * 50); // ~90-140
-  return Math.round(50 + jitter * 40); // ~30-70
+  const jitter = rand01(`qtyBase:${productName}`) - 0.5;
+  if (tier === "STAR") return Math.round(260 + jitter * 60);
+  if (tier === "MID") return Math.round(115 + jitter * 50);
+  return Math.round(50 + jitter * 40);
 }
 
-// Monthly price variation: mild noise + occasional promo dips
+// Monthly price variation
 function monthlyPrice(product, year, month) {
   const y = yearConfig[year];
   const base = product.base_price * y.price;
 
-  // small monthly drift/noise
   const noise =
     (rand01(`priceNoise:${product.nom}:${year}:${month}`) - 0.5) * 0.04; // +/-2%
   let price = base * (1 + noise);
 
-  // promo probability differs by category
   const promoProb =
     {
       OTC: 0.05,
@@ -263,18 +278,16 @@ function monthlyPrice(product, year, month) {
 
   const promoRoll = rand01(`promo:${product.nom}:${year}:${month}`);
   if (promoRoll < promoProb) {
-    // promo between -5% and -18%
     const promoDepth =
-      0.05 + rand01(`promoDepth:${product.nom}:${year}:${month}`) * 0.13;
+      0.05 + rand01(`promoDepth:${product.nom}:${year}:${month}`) * 0.13; // -5% à -18%
     price = price * (1 - promoDepth);
   }
 
-  // keep sane bounds
   price = clamp(price, 1.0, 200.0);
   return round2(price);
 }
 
-// Quantity model: base tier × seasonality × year multipliers × light noise
+// Quantity model
 function monthlyQty(product, year, month) {
   const y = yearConfig[year];
   const catMul = y.catVol?.[product.categorie_code] ?? 1.0;
@@ -286,7 +299,6 @@ function monthlyQty(product, year, month) {
     (rand01(`qtyNoise:${product.nom}:${year}:${month}`) - 0.5) * 0.2; // +/-10%
   let q = b * s * y.vol * catMul * (1 + noise);
 
-  // ensure int >= 0
   q = Math.max(0, Math.round(q));
   return q;
 }
@@ -362,5 +374,5 @@ console.log(
   "✅ CSV générés dans /data : categories.csv, produits.csv, ventes_mensuelles.csv",
 );
 console.log(
-  `   ventes_mensuelles.csv: ${salesRows.length} lignes (attendu: 50*36=1800)`,
+  `   ventes_mensuelles.csv: ${salesRows.length} lignes (attendu: 50*${years.length * 12}=${50 * years.length * 12})`,
 );

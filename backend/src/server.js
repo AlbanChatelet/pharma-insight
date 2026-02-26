@@ -231,6 +231,53 @@ app.get("/compare/yearly", (req, res) => {
   });
 });
 
+app.get("/analysis/price-volume", (req, res) => {
+  const year = YearSchema.parse(req.query.year);
+  const ref = YearSchema.parse(req.query.ref);
+  const categoryId = req.query.categoryId ? String(req.query.categoryId) : null;
+
+  const rowsY = salesFilter({ year, categoryId });
+  const rowsR = salesFilter({ year: ref, categoryId });
+
+  const { ca: caY, qty: qtyY } = sumRevenue(rowsY);
+  const { ca: caR, qty: qtyR } = sumRevenue(rowsR);
+
+  const pmY = qtyY > 0 ? caY / qtyY : 0;
+  const pmR = qtyR > 0 ? caR / qtyR : 0;
+
+  const deltaCA = caY - caR;
+
+  // Décomposition
+  const effet_volume = (qtyY - qtyR) * pmR; // volume au prix ref
+  const effet_prix = (pmY - pmR) * qtyY; // prix sur volume year
+  const effet_mix = deltaCA - effet_volume - effet_prix; // résiduel
+
+  const pct = (a, b) => (b !== 0 ? (a / b) * 100 : 0);
+
+  res.json({
+    scope: { year, ref, categoryId },
+    year: {
+      chiffre_affaires: Math.round(caY * 100) / 100,
+      quantite: qtyY,
+      prix_moyen_pondere: Math.round(pmY * 100) / 100,
+    },
+    ref: {
+      chiffre_affaires: Math.round(caR * 100) / 100,
+      quantite: qtyR,
+      prix_moyen_pondere: Math.round(pmR * 100) / 100,
+    },
+    delta: {
+      chiffre_affaires: Math.round(deltaCA * 100) / 100,
+      pct_chiffre_affaires: Math.round(pct(deltaCA, caR) * 100) / 100,
+    },
+    decomposition: {
+      effet_volume: Math.round(effet_volume * 100) / 100,
+      effet_prix: Math.round(effet_prix * 100) / 100,
+      effet_mix: Math.round(effet_mix * 100) / 100,
+    },
+  });
+});
+
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`✅ Express API running on http://localhost:${PORT}`);

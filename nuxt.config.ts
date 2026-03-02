@@ -1,8 +1,7 @@
 export default defineNuxtConfig({
-  modules: ["@nuxtjs/tailwindcss"],
   runtimeConfig: {
     public: {
-      apiBase: "http://localhost:3001",
+      apiBase: process.env.NUXT_PUBLIC_API_BASE || "/api",
     },
   },
 });

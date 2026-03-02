@@ -22,12 +22,12 @@ const legendBins = [
 ];
 
 function legendTextClass(hex) {
-  // 4 plus foncés -> texte blanc
   return ["#0096c7", "#0077b6", "#023e8a", "#03045e"].includes(hex)
     ? "text-white"
     : "text-slate-900";
 }
-// Palette (clair -> foncé) = tes couleurs
+
+// Palette (clair -> foncé)
 const palette = [
   { name: "Light Cyan", hex: "#caf0f8" },
   { name: "Frosted Blue", hex: "#ade8f4" },
@@ -51,7 +51,10 @@ function formatMoney(v) {
   return Number(v || 0).toLocaleString("fr-FR", { maximumFractionDigits: 0 }) + " €";
 }
 function formatMoney2(v) {
-  return Number(v || 0).toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " €";
+  return Number(v || 0).toLocaleString("fr-FR", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }) + " €";
 }
 
 const flatValues = computed(() => {
@@ -83,12 +86,11 @@ function cellStyle(value) {
   const hex = palette[idx].hex;
   return {
     backgroundColor: hex,
-    borderColor: "rgba(15, 23, 42, 0.12)", // slate-900/12
+    borderColor: "rgba(15, 23, 42, 0.12)",
   };
 }
 
 function textClassForBin(idx) {
-  // 4 bleus les plus foncés = idx 5..8 -> texte blanc
   return idx >= 5 ? "text-white" : "text-slate-900";
 }
 
@@ -101,7 +103,7 @@ Prix: ${formatMoney2(raw.prix_moyen_pondere)}`;
 }
 
 function monthLabel(m) {
-  return ["Jan","Fév","Mar","Avr","Mai","Juin","Juil","Aoû","Sep","Oct","Nov","Déc"][m - 1];
+  return ["Jan", "Fév", "Mar", "Avr", "Mai", "Juin", "Juil", "Aoû", "Sep", "Oct", "Nov", "Déc"][m - 1];
 }
 </script>
 
@@ -117,9 +119,10 @@ function monthLabel(m) {
       </div>
 
       <div class="text-xs text-slate-500">
-        min: <span class="font-semibold text-slate-700">{{ minV.toLocaleString("fr-FR") }}</span>
-        ·
-        max: <span class="font-semibold text-slate-700">{{ maxV.toLocaleString("fr-FR") }}</span>
+        min:
+        <span class="font-semibold text-slate-700">{{ minV.toLocaleString("fr-FR") }}</span>
+        · max:
+        <span class="font-semibold text-slate-700">{{ maxV.toLocaleString("fr-FR") }}</span>
       </div>
     </div>
 
@@ -131,93 +134,79 @@ function monthLabel(m) {
       </div>
 
       <div class="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-9">
-  <div
-    v-for="b in legendBins"
-    :key="b.hex"
-    class="flex items-center gap-2 rounded-2xl border px-2 py-2 text-[11px] font-semibold"
-    :class="legendTextClass(b.hex)"
-    :style="{ backgroundColor: b.hex, borderColor: 'rgba(15, 23, 42, 0.12)' }"
-    :title="b.label"
-  >
-    <span class="h-3 w-3 rounded-lg border border-black/10" :style="{ backgroundColor: b.hex }"></span>
-    <span class="truncate">{{ b.label }}</span>
-  </div>
-</div>
+        <div
+          v-for="b in legendBins"
+          :key="b.hex"
+          class="flex items-center justify-center gap-2 rounded-xl border px-2 py-2 text-[11px] font-semibold"
+          :class="legendTextClass(b.hex)"
+          :style="{ backgroundColor: b.hex, borderColor: 'rgba(15, 23, 42, 0.12)' }"
+          :title="b.label"
+        >
+          
+          <span class="truncate">{{ b.label }}</span>
+        </div>
+      </div>
     </div>
 
-    <!-- Table -->
-    <div class="mt-5 overflow-auto">
-      <div class="min-w-[900px]">
+    <!-- Table (fixe, sans scroll) -->
+    <div class="mt-5">
+      <!-- Desktop : cases 60px / Mobile : cases 52px -->
+      <div class="grid gap-2 [grid-template-columns:72px_repeat(12,60px)] max-lg:[grid-template-columns:64px_repeat(12,52px)]">
         <!-- header mois -->
-        <div class="grid grid-cols-[90px_repeat(12,1fr)] gap-2">
-          <div class="text-xs font-medium text-slate-500"></div>
-          <div
-            v-for="m in months"
-            :key="m"
-            class="text-center text-xs font-semibold text-slate-500"
-          >
-            {{ monthLabel(m) }}
-          </div>
+        <div class="text-xs font-medium text-slate-500"></div>
+        <div
+          v-for="m in months"
+          :key="m"
+          class="text-center text-xs font-semibold text-slate-500"
+        >
+          {{ monthLabel(m) }}
         </div>
 
         <!-- rows -->
-        <div
-          v-for="row in matrix"
-          :key="row.year"
-          class="mt-2 grid grid-cols-[90px_repeat(12,1fr)] gap-2 items-stretch"
-        >
+        <template v-for="row in matrix" :key="row.year">
           <div class="flex items-center text-sm font-semibold text-slate-900">
             {{ row.year }}
           </div>
 
-          <!-- Case cliquable -> détail mois (avec categoryId conservé) -->
           <NuxtLink
             v-for="cell in row.values"
             :key="`${row.year}-${cell.month}`"
             :to="`/month/${row.year}/${cell.month}${props.selectedCategoryId !== 'ALL' ? `?categoryId=${props.selectedCategoryId}` : ''}`"
-            class="group relative h-12 rounded-3xl border
-                   flex items-center justify-center text-xs font-semibold tracking-tight
+            class="group relative h-12 max-lg:h-11 rounded-xl border
+                   flex items-center justify-center text-[11px] max-lg:text-[10px]
+                   font-semibold tracking-tight
                    transition-all duration-200 ease-out
                    focus:outline-none focus-visible:ring-4 focus-visible:ring-slate-900/15"
             :class="textClassForBin(binIndex(cell.value))"
             :style="cellStyle(cell.value)"
             :title="tooltipText(row.year, cell.month, cell.raw)"
           >
-            <!-- glow / ring -->
+            <!-- glow -->
             <span
-              class="pointer-events-none absolute inset-0 rounded-3xl opacity-0
-                     transition-opacity duration-200
-                     group-hover:opacity-100"
+              class="pointer-events-none absolute inset-0 rounded-xl opacity-0 transition-opacity duration-200 group-hover:opacity-100"
               style="box-shadow: 0 10px 25px rgba(2,62,138,0.22);"
             ></span>
 
-            <!-- sheen (reflet) -->
+            <!-- sheen -->
             <span
-              class="pointer-events-none absolute -inset-8 rotate-12 opacity-0
-                     transition-opacity duration-200 group-hover:opacity-100"
+              class="pointer-events-none absolute -inset-8 rotate-12 opacity-0 transition-opacity duration-200 group-hover:opacity-100"
               style="background: linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,.35), rgba(255,255,255,0));"
             ></span>
 
-            <!-- content -->
             <span class="relative z-10 select-none">
               {{ cell.display }}
             </span>
 
-            <!-- hover scale + ring -->
             <span
-              class="pointer-events-none absolute inset-0 rounded-3xl
-                     transition-transform duration-200 ease-out
-                     group-hover:scale-[1.06]"
+              class="pointer-events-none absolute inset-0 rounded-xl transition-transform duration-200 ease-out group-hover:scale-[1.06]"
             ></span>
 
             <span
-              class="pointer-events-none absolute inset-0 rounded-3xl
-                     opacity-0 transition-opacity duration-200
-                     group-hover:opacity-100"
+              class="pointer-events-none absolute inset-0 rounded-xl opacity-0 transition-opacity duration-200 group-hover:opacity-100"
               style="outline: 2px solid rgba(3,4,94,0.25); outline-offset: 2px;"
             ></span>
           </NuxtLink>
-        </div>
+        </template>
       </div>
     </div>
 

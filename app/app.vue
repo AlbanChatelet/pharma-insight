@@ -79,6 +79,15 @@ function isActive(path) {
 >
   Évolution
 </NuxtLink>
+<NuxtLink
+  to="/seasonality"
+  class="pb-1 border-b-2 transition"
+  :class="isActive('/seasonality')
+    ? 'border-slate-900 text-slate-900'
+    : 'border-transparent text-slate-500 hover:text-slate-900'"
+>
+  Saisonnalité
+</NuxtLink>
         </nav>
 
       </div>

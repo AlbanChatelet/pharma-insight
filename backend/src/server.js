@@ -554,6 +554,142 @@ app.get("/timeseries/product", (req, res) => {
   });
 });
 
+app.get("/analysis/month-detail", (req, res) => {
+  const year = YearSchema.parse(req.query.year);
+  const month = z.coerce.number().int().min(1).max(12).parse(req.query.month);
+  const ref = req.query.ref ? YearSchema.parse(req.query.ref) : year - 1;
+  const categoryId = req.query.categoryId ? String(req.query.categoryId) : null;
+  const limit = req.query.limit
+    ? Math.max(1, Math.min(50, Number(req.query.limit)))
+    : 10;
+
+  // Totaux mois (year/ref)
+  let caY = 0,
+    qtyY = 0;
+  let caR = 0,
+    qtyR = 0;
+
+  // Per product (year/ref)
+  const byProd = new Map(); // id_produit -> { caY, qtyY, caR, qtyR }
+
+  for (const s of db.sales) {
+    // On ne garde que les 2 mois ciblés
+    if (s.mois !== month) continue;
+    if (s.annee !== year && s.annee !== ref) continue;
+
+    const p = db.productById.get(s.id_produit);
+    if (!p) continue;
+
+    if (categoryId && p.id_categorie !== categoryId) continue;
+
+    const ca = s.quantite * s.prix_moyen_unitaire;
+
+    // Totaux
+    if (s.annee === year) {
+      caY += ca;
+      qtyY += s.quantite;
+    } else {
+      caR += ca;
+      qtyR += s.quantite;
+    }
+
+    // Produit
+    let a = byProd.get(s.id_produit);
+    if (!a) {
+      a = { caY: 0, qtyY: 0, caR: 0, qtyR: 0 };
+      byProd.set(s.id_produit, a);
+    }
+
+    if (s.annee === year) {
+      a.caY += ca;
+      a.qtyY += s.quantite;
+    } else {
+      a.caR += ca;
+      a.qtyR += s.quantite;
+    }
+  }
+
+  const pmY = qtyY > 0 ? caY / qtyY : 0;
+  const pmR = qtyR > 0 ? caR / qtyR : 0;
+
+  const deltaCA = caY - caR;
+
+  // Décomposition mois
+  const effet_volume = (qtyY - qtyR) * pmR;
+  const effet_prix = (pmY - pmR) * qtyY;
+  const effet_mix = deltaCA - effet_volume - effet_prix;
+
+  const pct = (a, b) => (b !== 0 ? (a / b) * 100 : 0);
+
+  // Top produits du mois
+  const products = [];
+  for (const [id_produit, a] of byProd.entries()) {
+    const p = db.productById.get(id_produit);
+    const caProdY = a.caY;
+    const caProdR = a.caR;
+    const qtyProdY = a.qtyY;
+    const qtyProdR = a.qtyR;
+
+    const pmProdY = qtyProdY > 0 ? caProdY / qtyProdY : 0;
+    const pmProdR = qtyProdR > 0 ? caProdR / qtyProdR : 0;
+
+    const delta = caProdY - caProdR;
+
+    const vol = (qtyProdY - qtyProdR) * pmProdR;
+    const prx = (pmProdY - pmProdR) * qtyProdY;
+    const mix = delta - vol - prx;
+
+    products.push({
+      id_produit,
+      produit: p?.nom ?? "Produit",
+      categorie: db.categoryById.get(p?.id_categorie)?.nom ?? "Catégorie",
+      ca_ref: Math.round(caProdR * 100) / 100,
+      ca_year: Math.round(caProdY * 100) / 100,
+      delta: Math.round(delta * 100) / 100,
+      decomposition: {
+        effet_volume: Math.round(vol * 100) / 100,
+        effet_prix: Math.round(prx * 100) / 100,
+        effet_mix: Math.round(mix * 100) / 100,
+      },
+    });
+  }
+
+  const totalDelta = Math.round(deltaCA * 100) / 100;
+
+  const top = products
+    .sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta))
+    .slice(0, limit)
+    .map((p) => ({
+      ...p,
+      share_of_delta:
+        totalDelta !== 0 ? Math.round((p.delta / totalDelta) * 10000) / 100 : 0,
+    }));
+
+  res.json({
+    scope: { year, month, ref, categoryId, limit },
+    month: {
+      chiffre_affaires: Math.round(caY * 100) / 100,
+      quantite: qtyY,
+      prix_moyen_pondere: Math.round(pmY * 100) / 100,
+    },
+    ref: {
+      chiffre_affaires: Math.round(caR * 100) / 100,
+      quantite: qtyR,
+      prix_moyen_pondere: Math.round(pmR * 100) / 100,
+    },
+    delta: {
+      chiffre_affaires: Math.round(deltaCA * 100) / 100,
+      pct_chiffre_affaires: Math.round(pct(deltaCA, caR) * 100) / 100,
+    },
+    decomposition: {
+      effet_volume: Math.round(effet_volume * 100) / 100,
+      effet_prix: Math.round(effet_prix * 100) / 100,
+      effet_mix: Math.round(effet_mix * 100) / 100,
+    },
+    top_products: top,
+  });
+});
+
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`✅ Express API running on http://localhost:${PORT}`);

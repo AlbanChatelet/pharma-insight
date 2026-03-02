@@ -2,11 +2,14 @@
 import { computed } from "vue";
 
 const props = defineProps({
-  years: { type: Array, required: true },        // [2020..2025]
-  months: { type: Array, required: true },       // [1..12]
-  matrix: { type: Array, required: true },       // [{ year, values: [{month, value, raw}] }]
-  metricLabel: { type: String, required: true }, // "CA", "Quantité", "Prix moyen"
+  years: { type: Array, required: true },
+  months: { type: Array, required: true },
+  matrix: { type: Array, required: true },
+  metricLabel: { type: String, required: true },
+  selectedCategoryId: { type: String, default: "ALL" }, // ✅ ajouté
 });
+
+
 
 function clamp(n, min, max) {
   return Math.max(min, Math.min(max, n));
@@ -27,40 +30,64 @@ const flatValues = computed(() => {
   for (const row of props.matrix) {
     for (const c of row.values) arr.push(Number(c.value) || 0);
   }
-  return arr;
+  return arr.length ? arr : [0];
 });
 
 const minV = computed(() => Math.min(...flatValues.value));
 const maxV = computed(() => Math.max(...flatValues.value));
 
-function cellClass(value) {
-  // Intensité 0..1
+function intensity(value) {
   const min = minV.value;
   const max = maxV.value;
   const t = max > min ? (value - min) / (max - min) : 0.5;
-  const x = clamp(t, 0, 1);
+  return clamp(t, 0, 1);
+}
 
-  // Palette simple Tailwind (sans couleur custom Chart) :
-  // plus x est haut -> plus foncé
-  if (x < 0.15) return "bg-slate-50 text-slate-700";
-  if (x < 0.30) return "bg-slate-100 text-slate-800";
-  if (x < 0.45) return "bg-slate-200 text-slate-900";
-  if (x < 0.60) return "bg-slate-300 text-slate-900";
-  if (x < 0.75) return "bg-slate-400 text-white";
-  if (x < 0.90) return "bg-slate-600 text-white";
-  return "bg-slate-900 text-white";
+/**
+ * Palette “froid → chaud”
+ * Low  -> bleu
+ * mid  -> vert
+ * high -> jaune/orange/rouge
+ */
+function cellClass(value) {
+  const x = intensity(value);
+
+  // 8 paliers de couleur (lisible, contrasté)
+  if (x < 0.12) return "bg-blue-100 text-slate-900 border-blue-200";
+  if (x < 0.25) return "bg-sky-200 text-slate-900 border-sky-300";
+  if (x < 0.38) return "bg-emerald-200 text-slate-900 border-emerald-300";
+  if (x < 0.50) return "bg-lime-200 text-slate-900 border-lime-300";
+  if (x < 0.62) return "bg-yellow-200 text-slate-900 border-yellow-300";
+  if (x < 0.75) return "bg-orange-300 text-slate-900 border-orange-400";
+  if (x < 0.88) return "bg-red-300 text-slate-900 border-red-400";
+  return "bg-red-600 text-white border-red-700";
 }
 
 function tooltipText(year, month, raw) {
-  // raw = { chiffre_affaires, quantite, prix_moyen_pondere }
   const m = String(month).padStart(2, "0");
-  return `${year}-${m}\nCA: ${formatMoney(raw.chiffre_affaires)}\nQté: ${formatValue(raw.quantite)}\nPrix: ${formatMoney2(raw.prix_moyen_pondere)}`;
+  return `${year}-${m}
+CA: ${formatMoney(raw.chiffre_affaires)}
+Qté: ${formatValue(raw.quantite)}
+Prix: ${formatMoney2(raw.prix_moyen_pondere)}`;
 }
+
+// Légende : mêmes paliers que cellClass
+const legendBins = [
+  { label: "Très faible", cls: "bg-blue-100 border-blue-200" },
+  { label: "Faible", cls: "bg-sky-200 border-sky-300" },
+  { label: "Moyen -", cls: "bg-emerald-200 border-emerald-300" },
+  { label: "Moyen", cls: "bg-lime-200 border-lime-300" },
+  { label: "Moyen +", cls: "bg-yellow-200 border-yellow-300" },
+  { label: "Élevé", cls: "bg-orange-300 border-orange-400" },
+  { label: "Très élevé", cls: "bg-red-300 border-red-400" },
+  { label: "Pic", cls: "bg-red-600 border-red-700" },
+];
 </script>
 
 <template>
   <div class="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-black/5">
-    <div class="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+    <!-- Header -->
+    <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
       <div>
         <h2 class="text-base font-semibold text-slate-900">Saisonnalité</h2>
         <p class="text-xs text-slate-500">
@@ -69,12 +96,35 @@ function tooltipText(year, month, raw) {
       </div>
 
       <div class="text-xs text-slate-500">
-        min: {{ minV.toLocaleString("fr-FR") }} · max: {{ maxV.toLocaleString("fr-FR") }}
+        min: <span class="font-medium text-slate-700">{{ minV.toLocaleString("fr-FR") }}</span>
+        ·
+        max: <span class="font-medium text-slate-700">{{ maxV.toLocaleString("fr-FR") }}</span>
       </div>
     </div>
 
+    <!-- Légende -->
+    <div class="mt-4 rounded-2xl bg-slate-50 p-4 ring-1 ring-black/5">
+      <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <p class="text-xs font-medium text-slate-700">Légende</p>
+        <p class="text-xs text-slate-500">Faible → Fort</p>
+      </div>
+
+      <div class="mt-3 grid grid-cols-4 gap-2 sm:grid-cols-8">
+        <div
+          v-for="b in legendBins"
+          :key="b.label"
+          class="flex items-center gap-2 rounded-xl border px-2 py-2 text-[11px] text-slate-700"
+          :class="b.cls"
+        >
+          <span class="h-3 w-3 rounded-md border border-black/10" :class="b.cls"></span>
+          <span class="truncate">{{ b.label }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Table -->
     <div class="mt-5 overflow-auto">
-      <div class="min-w-[820px]">
+      <div class="min-w-[860px]">
         <!-- header mois -->
         <div class="grid grid-cols-[90px_repeat(12,1fr)] gap-2">
           <div class="text-xs font-medium text-slate-500"></div>
@@ -97,15 +147,24 @@ function tooltipText(year, month, raw) {
             {{ row.year }}
           </div>
 
-          <div
-            v-for="cell in row.values"
-            :key="`${row.year}-${cell.month}`"
-            class="h-10 rounded-xl border border-slate-200 flex items-center justify-center text-xs font-medium"
-            :class="cellClass(cell.value)"
-            :title="tooltipText(row.year, cell.month, cell.raw)"
-          >
-            {{ cell.display }}
-          </div>
+          <NuxtLink
+  v-for="cell in row.values"
+  :key="`${row.year}-${cell.month}`"
+  :to="`/month/${row.year}/${cell.month}${props.selectedCategoryId !== 'ALL' ? `?categoryId=${props.selectedCategoryId}` : ''}`"
+  class="group relative h-11 rounded-2xl border flex items-center justify-center text-xs font-semibold tracking-tight transition-all duration-150"
+  :class="cellClass(cell.value)"
+  :title="tooltipText(row.year, cell.month, cell.raw)"
+>
+  <div
+    class="absolute inset-0 rounded-2xl transition-all duration-150
+           group-hover:scale-[1.05] group-hover:shadow-xl
+           group-hover:ring-2 group-hover:ring-slate-900/30"
+  ></div>
+
+  <span class="relative z-10 select-none">
+    {{ cell.display }}
+  </span>
+</NuxtLink>
         </div>
       </div>
     </div>

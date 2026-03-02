@@ -143,12 +143,13 @@ onMounted(async () => {
 
     <template v-else>
       <SeasonalityHeatmap
-        v-if="matrix.length"
-        :years="years"
-        :months="months"
-        :matrix="matrix"
-        :metric-label="metricLabel"
-      />
+  v-if="matrix.length"
+  :years="years"
+  :months="months"
+  :matrix="matrix"
+  :metric-label="metricLabel"
+  :selected-category-id="selectedCategoryId"
+/>
     </template>
   </div>
 </template>

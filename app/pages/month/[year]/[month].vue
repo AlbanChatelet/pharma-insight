@@ -16,6 +16,48 @@ const errorMsg = ref("");
 
 const data = ref(null);
 
+const legendBins = [
+  { label: "Très faible", hex: "#caf0f8" },
+  { label: "Faible", hex: "#ade8f4" },
+  { label: "Plutôt faible", hex: "#90e0ef" },
+  { label: "Modéré", hex: "#48cae4" },
+  { label: "Soutenu", hex: "#00b4d8" },
+  { label: "Élevé", hex: "#0096c7" },
+  { label: "Très élevé", hex: "#0077b6" },
+  { label: "Exceptionnel", hex: "#023e8a" },
+  { label: "Pic", hex: "#03045e" },
+];
+
+const monthLegend = computed(() => legendBins[monthBin.value] || legendBins[0]);
+const monthLegendTextClass = computed(() => (monthBin.value >= 5 ? "text-white" : "text-slate-900"));
+
+const palette = [
+  "#caf0f8",
+  "#ade8f4",
+  "#90e0ef",
+  "#48cae4",
+  "#00b4d8",
+  "#0096c7",
+  "#0077b6",
+  "#023e8a",
+  "#03045e",
+];
+
+function clamp(n, min, max) {
+  return Math.max(min, Math.min(max, n));
+}
+
+function binIndex(value, min, max) {
+  const t = max > min ? (value - min) / (max - min) : 0.5;
+  const x = clamp(t, 0, 1);
+  const idx = Math.floor(x * palette.length);
+  return clamp(idx, 0, palette.length - 1);
+}
+
+function isDarkBin(idx) {
+  return idx >= 5; // 4 plus foncés => idx 5..8
+}
+
 const monthName = computed(() => (
   ["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"][month.value - 1]
 ));
@@ -29,6 +71,14 @@ const selectedCategoryLabel = computed(() => {
   const c = categories.value.find((x) => x.id_categorie === selectedCategoryId.value);
   return c?.nom ?? "Catégorie";
 });
+
+const contextMin = ref(0);
+const contextMax = ref(0);
+const monthBin = computed(() => {
+  const v = Number(data.value?.month?.chiffre_affaires || 0);
+  return binIndex(v, contextMin.value, contextMax.value);
+});
+const monthColor = computed(() => palette[monthBin.value] || "#caf0f8");
 
 function formatMoney(n) {
   return Number(n || 0).toLocaleString("fr-FR", { maximumFractionDigits: 0 }) + " €";
@@ -68,6 +118,21 @@ async function loadMonthDetail() {
   } finally {
     loading.value = false;
   }
+      // --- Contexte couleurs (2020→2025) pour la catégorie sélectionnée ---
+    const yearsRange = [2020, 2021, 2022, 2023, 2024, 2025];
+    const q = selectedCategoryId.value === "ALL" ? "" : `&categoryId=${selectedCategoryId.value}`;
+
+    const blocks = await Promise.all(
+      yearsRange.map((y) =>
+        fetch(`${config.public.apiBase}/timeseries/revenue?year=${y}${q}`)
+          .then((r) => r.json())
+          .then((j) => j.points || [])
+      )
+    );
+
+    const allVals = blocks.flat().map((p) => Number(p.chiffre_affaires) || 0);
+    contextMin.value = allVals.length ? Math.min(...allVals) : 0;
+    contextMax.value = allVals.length ? Math.max(...allVals) : 0;
 }
 
 onMounted(async () => {
@@ -105,6 +170,21 @@ watch(selectedCategoryId, () => loadMonthDetail());
         <h1 class="mt-2 text-3xl font-semibold tracking-tight text-slate-900">
           {{ monthName }} {{ year }}
         </h1>
+        <div class="mt-3 flex flex-wrap items-center gap-3">
+  <span
+    class="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold shadow-sm"
+    :class="monthLegendTextClass"
+    :style="{ backgroundColor: monthLegend.hex, borderColor: 'rgba(15, 23, 42, 0.12)' }"
+    :title="`Intensité: ${monthLegend.label} (échelle 2020–2025)`"
+  >
+    <span class="h-3 w-3 rounded-full border border-black/10" :style="{ backgroundColor: monthLegend.hex }"></span>
+    Intensité du mois : {{ monthLegend.label }}
+  </span>
+
+  <span class="text-xs text-slate-500">
+    Échelle 2020–2025 ({{ selectedCategoryLabel }})
+  </span>
+</div>
 
         <p class="mt-2 text-sm text-slate-600">
           {{ selectedCategoryLabel }} — comparaison avec {{ refYear }}

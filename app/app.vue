@@ -12,14 +12,24 @@ function isActive(path) {
     <header class="border-b border-slate-200 bg-white">
       <div class="mx-auto max-w-6xl px-6 py-4 flex items-center justify-between">
         
-        <!-- Logo / titre -->
-        <div>
-          <h1 class="text-lg font-semibold tracking-tight text-slate-900">
-            PharmaInsight
-          </h1>
-          <p class="text-xs text-slate-500">
-            Outil interne ACAT LH
-          </p>
+        <!-- Logo + titre -->
+        <div class="flex items-center gap-3">
+          <!-- Logo -->
+          <img 
+            src="/logo.png" 
+            alt="PharmaInsight logo"
+            class="h-10 w-10 object-contain"
+          />
+
+          <!-- Texte -->
+          <div>
+            <h1 class="text-lg font-semibold tracking-tight text-slate-900">
+              PharmaInsight
+            </h1>
+            <p class="text-xs text-slate-500">
+              Outil interne ACAT LH
+            </p>
+          </div>
         </div>
 
         <!-- Navigation -->
@@ -43,51 +53,56 @@ function isActive(path) {
           >
             Contribution catégories
           </NuxtLink>
+
           <NuxtLink
-  to="/price-volume"
-  class="pb-1 border-b-2 transition"
-  :class="isActive('/price-volume')
-    ? 'border-slate-900 text-slate-900'
-    : 'border-transparent text-slate-500 hover:text-slate-900'"
->
-  Prix vs Volume
-</NuxtLink>
-<NuxtLink
-  to="/diagnostic"
-  class="pb-1 border-b-2 transition"
-  :class="isActive('/diagnostic')
-    ? 'border-slate-900 text-slate-900'
-    : 'border-transparent text-slate-500 hover:text-slate-900'"
->
-  Diagnostic
-</NuxtLink>
-<NuxtLink
-  to="/top-products"
-  class="pb-1 border-b-2 transition"
-  :class="isActive('/top-products')
-    ? 'border-slate-900 text-slate-900'
-    : 'border-transparent text-slate-500 hover:text-slate-900'"
->
-  Top produits
-</NuxtLink>
-<NuxtLink
-  to="/evolution"
-  class="pb-1 border-b-2 transition"
-  :class="isActive('/evolution')
-    ? 'border-slate-900 text-slate-900'
-    : 'border-transparent text-slate-500 hover:text-slate-900'"
->
-  Évolution
-</NuxtLink>
-<NuxtLink
-  to="/seasonality"
-  class="pb-1 border-b-2 transition"
-  :class="isActive('/seasonality')
-    ? 'border-slate-900 text-slate-900'
-    : 'border-transparent text-slate-500 hover:text-slate-900'"
->
-  Saisonnalité
-</NuxtLink>
+            to="/price-volume"
+            class="pb-1 border-b-2 transition"
+            :class="isActive('/price-volume')
+              ? 'border-slate-900 text-slate-900'
+              : 'border-transparent text-slate-500 hover:text-slate-900'"
+          >
+            Prix vs Volume
+          </NuxtLink>
+
+          <NuxtLink
+            to="/diagnostic"
+            class="pb-1 border-b-2 transition"
+            :class="isActive('/diagnostic')
+              ? 'border-slate-900 text-slate-900'
+              : 'border-transparent text-slate-500 hover:text-slate-900'"
+          >
+            Diagnostic
+          </NuxtLink>
+
+          <NuxtLink
+            to="/top-products"
+            class="pb-1 border-b-2 transition"
+            :class="isActive('/top-products')
+              ? 'border-slate-900 text-slate-900'
+              : 'border-transparent text-slate-500 hover:text-slate-900'"
+          >
+            Top produits
+          </NuxtLink>
+
+          <NuxtLink
+            to="/evolution"
+            class="pb-1 border-b-2 transition"
+            :class="isActive('/evolution')
+              ? 'border-slate-900 text-slate-900'
+              : 'border-transparent text-slate-500 hover:text-slate-900'"
+          >
+            Évolution
+          </NuxtLink>
+
+          <NuxtLink
+            to="/seasonality"
+            class="pb-1 border-b-2 transition"
+            :class="isActive('/seasonality')
+              ? 'border-slate-900 text-slate-900'
+              : 'border-transparent text-slate-500 hover:text-slate-900'"
+          >
+            Saisonnalité
+          </NuxtLink>
         </nav>
 
       </div>

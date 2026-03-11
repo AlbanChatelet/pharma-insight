@@ -6,13 +6,10 @@ const config = useRuntimeConfig();
 const years = ref([]);
 const categories = ref([]);
 const selectedCategoryId = ref("ALL");
-
-const metric = ref("chiffre_affaires"); // chiffre_affaires | quantite | prix_moyen_pondere
-
+const metric = ref("chiffre_affaires");
 const loading = ref(true);
 const errorMsg = ref("");
-const matrix = ref([]); // [{year, values:[{month,value,display,raw}]}]
-
+const matrix = ref([]);
 const months = Array.from({ length: 12 }, (_, i) => i + 1);
 
 const categoryIdParam = computed(() =>
@@ -22,7 +19,7 @@ const categoryIdParam = computed(() =>
 const metricLabel = computed(() => {
   if (metric.value === "quantite") return "Quantité";
   if (metric.value === "prix_moyen_pondere") return "Prix moyen pondéré";
-  return "Chiffre d’affaires";
+  return "Chiffre d'affaires";
 });
 
 function formatCellValue(v) {
@@ -36,39 +33,23 @@ async function loadHeatmap() {
   loading.value = true;
   errorMsg.value = "";
   matrix.value = [];
-
   try {
-    // On cible 2020..2025 si dispo
-    const yList = (years.value || []).filter((y) => y >= 2020 && y <= 2025).sort((a,b)=>a-b);
-
+    const yList = (years.value || []).filter((y) => y >= 2020 && y <= 2025).sort((a, b) => a - b);
     const reqs = yList.map((y) =>
       fetch(`${config.public.apiBase}/timeseries/revenue?year=${y}${categoryIdParam.value}`)
         .then((r) => r.json())
         .then((j) => ({ year: y, points: j.points || [] }))
     );
-
     const perYear = await Promise.all(reqs);
-
     matrix.value = perYear.map((block) => ({
       year: block.year,
       values: months.map((m) => {
-        const raw = block.points.find((p) => p.mois === m) || {
-          mois: m,
-          chiffre_affaires: 0,
-          quantite: 0,
-          prix_moyen_pondere: 0
-        };
+        const raw = block.points.find((p) => p.mois === m) || { mois: m, chiffre_affaires: 0, quantite: 0, prix_moyen_pondere: 0 };
         const value = Number(raw[metric.value]) || 0;
-
-        return {
-          month: m,
-          value,
-          display: formatCellValue(value),
-          raw,
-        };
+        return { month: m, value, display: formatCellValue(value), raw };
       }),
     }));
-  } catch (e) {
+  } catch {
     errorMsg.value = "Impossible de charger la heatmap saisonnalité.";
   } finally {
     loading.value = false;
@@ -81,10 +62,8 @@ onMounted(async () => {
       fetch(`${config.public.apiBase}/meta/years`),
       fetch(`${config.public.apiBase}/meta/categories`)
     ]);
-
     years.value = (await yearsRes.json()).years || [];
     categories.value = (await catsRes.json()).categories || [];
-
     await loadHeatmap();
   } catch {
     errorMsg.value = "Impossible de charger les métadonnées (API).";
@@ -94,40 +73,41 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="mx-auto max-w-6xl px-6 py-10">
-    <header class="mb-8 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+  <div class="mx-auto max-w-6xl px-4 sm:px-6 py-6 sm:py-10">
+
+    <!-- Header -->
+    <header class="mb-6 sm:mb-8 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
       <div>
-        <h1 class="text-3xl font-semibold tracking-tight text-slate-900">
+        <h1 class="text-2xl sm:text-3xl font-semibold tracking-tight text-slate-900">
           Saisonnalité
         </h1>
-        <p class="mt-2 text-sm text-slate-600">
+        <p class="mt-1 sm:mt-2 text-sm text-slate-600">
           Vue heatmap 2020 → 2025 (lecture immédiate des tendances)
         </p>
       </div>
 
-      <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
-        <div class="flex items-center gap-3">
+      <!-- Filtres -->
+      <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+        <div class="flex items-center justify-between sm:justify-start gap-3 bg-white sm:bg-transparent rounded-xl sm:rounded-none px-4 sm:px-0 py-2.5 sm:py-0 border border-slate-200 sm:border-0 shadow-sm sm:shadow-none">
           <span class="text-sm font-medium text-slate-700">Catégorie</span>
           <select
             v-model="selectedCategoryId"
             @change="loadHeatmap"
-            class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:border-slate-300 focus:ring-2 focus:ring-slate-900/10"
+            class="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm shadow-sm outline-none focus:border-slate-300 focus:ring-2 focus:ring-slate-900/10 max-w-[160px]"
           >
             <option value="ALL">Toutes catégories</option>
-            <option v-for="c in categories" :key="c.id_categorie" :value="c.id_categorie">
-              {{ c.nom }}
-            </option>
+            <option v-for="c in categories" :key="c.id_categorie" :value="c.id_categorie">{{ c.nom }}</option>
           </select>
         </div>
 
-        <div class="flex items-center gap-3">
+        <div class="flex items-center justify-between sm:justify-start gap-3 bg-white sm:bg-transparent rounded-xl sm:rounded-none px-4 sm:px-0 py-2.5 sm:py-0 border border-slate-200 sm:border-0 shadow-sm sm:shadow-none">
           <span class="text-sm font-medium text-slate-700">Métrique</span>
           <select
             v-model="metric"
             @change="loadHeatmap"
-            class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:border-slate-300 focus:ring-2 focus:ring-slate-900/10"
+            class="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm shadow-sm outline-none focus:border-slate-300 focus:ring-2 focus:ring-slate-900/10 max-w-[160px]"
           >
-            <option value="chiffre_affaires">Chiffre d’affaires</option>
+            <option value="chiffre_affaires">Chiffre d'affaires</option>
             <option value="quantite">Quantités</option>
             <option value="prix_moyen_pondere">Prix moyen pondéré</option>
           </select>
@@ -135,21 +115,29 @@ onMounted(async () => {
       </div>
     </header>
 
+    <!-- Erreur -->
     <div v-if="errorMsg" class="mb-6 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
       {{ errorMsg }}
     </div>
 
-    <div v-if="loading" class="text-sm text-slate-500">Chargement…</div>
+    <!-- Loading -->
+    <div v-if="loading" class="flex items-center gap-2 text-sm text-slate-500 py-8">
+      <svg class="animate-spin h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+      </svg>
+      Chargement…
+    </div>
 
     <template v-else>
       <SeasonalityHeatmap
-  v-if="matrix.length"
-  :years="years"
-  :months="months"
-  :matrix="matrix"
-  :metric-label="metricLabel"
-  :selected-category-id="selectedCategoryId"
-/>
+        v-if="matrix.length"
+        :years="years"
+        :months="months"
+        :matrix="matrix"
+        :metric-label="metricLabel"
+        :selected-category-id="selectedCategoryId"
+      />
     </template>
   </div>
 </template>
